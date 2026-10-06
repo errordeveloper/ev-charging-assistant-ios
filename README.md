@@ -16,14 +16,14 @@ This is a development bootstrap, not a finished charging app. It includes:
 
 ## Run on a Mac
 
-Install Xcode with Swift 6 and an iOS 18+ SDK/runtime, plus [Nix](https://nixos.org/download/) with the `nix-command` and `flakes` features enabled. Nix 2.31.2 is used in CI. The flake supports Apple Silicon and Intel Macs and supplies Python, Git, and [XcodeGen](https://github.com/yonaskolb/XcodeGen) 2.46.0. `flake.lock` pins Nixpkgs; `config/toolchain.json` pins the generator archive/checksum and CI installer/Actions versions.
+Install Xcode with Swift 6 and an iOS 18+ SDK/runtime, plus [Nix](https://nixos.org/download/) with the `nix-command` and `flakes` features enabled. Nix 2.31.2 is used in CI. The flake supports Apple Silicon and Intel Macs and supplies Git and [XcodeGen](https://github.com/yonaskolb/XcodeGen) 2.46.0. `flake.lock` pins Nixpkgs; `config/toolchain.json` pins the generator archive/checksum and CI installer/Actions versions.
 
 ```bash
 nix develop
-python3 scripts/test-nix-shell.py
-python3 scripts/test-xcodegen.py
+swift run repo-tools check-toolchain
+swift run repo-tools check-xcodegen
 swift test
-python3 scripts/validate-repo.py
+swift run repo-tools validate
 xcodegen generate
 open EVChargingAssistant.xcodeproj
 ```
@@ -33,10 +33,10 @@ CI uses the same shell without allowing lock-file updates. Run individual comman
 ```bash
 nix develop --no-update-lock-file --command swift test
 nix develop --no-update-lock-file --command bash scripts/test-ios.sh
-nix develop --no-update-lock-file --command python3 scripts/record-toolchain.py
+nix develop --no-update-lock-file --command swift run repo-tools record-toolchain
 ```
 
-Xcode, Swift, Apple SDKs and simulator runtimes remain host prerequisites. The shell uses `mkShellNoCC` to keep Nix's compiler/SDK configuration out of the app build. Select Xcode using `xcode-select` or set `DEVELOPER_DIR` before `nix develop`; the shell preserves that selection. `scripts/test-nix-shell.py` checks tool provenance and the minimum Swift and simulator SDK versions. An SDK alone does not provide a simulator runtime. Exact Xcode/runtime pinning remains pending a green CI run.
+Xcode, Swift, Apple SDKs and simulator runtimes remain host prerequisites. The shell uses `mkShellNoCC` to keep Nix's compiler/SDK configuration out of the app build. Select Xcode using `xcode-select` or set `DEVELOPER_DIR` before `nix develop`; the shell preserves that selection. `swift run repo-tools check-toolchain` checks tool provenance and the minimum Swift and simulator SDK versions. An SDK alone does not provide a simulator runtime. Exact Xcode/runtime pinning remains pending a green CI run.
 
 To update the supporting packages, run `nix flake update nixpkgs`, review `flake.lock`, and rerun the shell, generator, Swift and UI checks. The XcodeGen package reads the existing version, URL and checksum directly from `config/toolchain.json`, so upgrading Nixpkgs does not silently upgrade the generator.
 
@@ -46,7 +46,9 @@ Choose your Apple development team in Xcode for a physical iPhone. Simulator run
 
 No API credentials are needed for this scaffold. Generated Xcode project files and raw private lab evidence stay out of version control.
 
-The Nix XcodeGen package preserves both the executable and its bundled setting presets. `python3 scripts/test-xcodegen.py` generates an isolated sample project and checks its build defaults before CI starts a simulator; it does not compile the app or run UI tests. The standalone `scripts/install-xcodegen.sh` remains available for setups without Nix; add `.tools/xcodegen/bin` to `PATH` after running it and provide Python separately.
+The Nix XcodeGen package preserves both the executable and its bundled setting presets. `swift run repo-tools check-xcodegen` generates an isolated sample project and checks its build defaults before CI starts a simulator; it does not compile the app or run UI tests. The standalone `scripts/install-xcodegen.sh` remains available for setups without Nix; add `.tools/xcodegen/bin` to `PATH` after running it. It uses the same Swift helper and requires Xcode with Swift 6.
+
+Repository automation lives in the `repo-tools` SwiftPM executable, using Foundation and CryptoKit without third-party package dependencies. `swift run repo-tools --help` lists its commands; SwiftPM compiles it on first use and reuses the build. `swift test` covers both EVCore and the tooling. The tooling targets are separate from the EVCore library used by the app.
 
 ## Development documents
 

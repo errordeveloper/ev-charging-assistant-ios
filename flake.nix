@@ -18,7 +18,6 @@
       devShells = forAllSystems (pkgs: {
         default = pkgs.mkShellNoCC {
           packages = [
-            pkgs.python3
             pkgs.git
             self.packages.${pkgs.stdenv.hostPlatform.system}.xcodegen
           ];

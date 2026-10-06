@@ -152,13 +152,13 @@ Completion evidence:
 The structured source is `.github/backlog.json`. Preview with:
 
 ```bash
-python3 scripts/import-backlog.py
+swift run repo-tools import-backlog
 ```
 
 Once the remote repo exists and GitHub CLI is authenticated, explicitly create missing issues with:
 
 ```bash
-python3 scripts/import-backlog.py --repository errordeveloper/ev-charging-assistant-ios --apply
+swift run repo-tools import-backlog --repository errordeveloper/ev-charging-assistant-ios --apply
 ```
 
 The importer skips an existing issue with the exact prepared title. It does not assign people, launch agents, add labels, create milestones, or change repository rules.

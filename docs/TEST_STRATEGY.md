@@ -34,9 +34,9 @@ Future agent jobs must attach the issue/commit SHA and evidence manifest. Hardwa
 
 ### Toolchain attestation v1
 
-`python3 scripts/record-toolchain.py` writes `artifacts/toolchain.intoto.json`, a single unsigned JSON [in-toto Statement v1](https://github.com/in-toto/attestation/blob/main/spec/v1/statement.md). It uses the custom predicate type URI `https://github.com/errordeveloper/ev-charging-assistant-ios/attestations/toolchain/v1`, defined here. It has no signing envelope or signatures.
+`swift run repo-tools record-toolchain` writes `artifacts/toolchain.intoto.json`, a single unsigned JSON [in-toto Statement v1](https://github.com/in-toto/attestation/blob/main/spec/v1/statement.md). It uses the custom predicate type URI `https://github.com/errordeveloper/ev-charging-assistant-ios/attestations/toolchain/v1`, defined here. It has no signing envelope or signatures.
 
-The subjects are the SHA-256 digests of the actual bytes of `flake.nix`, `flake.lock`, `nix/xcodegen.nix`, `config/toolchain.json`, `.github/workflows/ci.yml` and the collector script. The predicate describes the observed environment associated with those configuration inputs, not the provenance or test status of a built app.
+The subjects are the SHA-256 digests of the actual bytes of `flake.nix`, `flake.lock`, `nix/xcodegen.nix`, `config/toolchain.json`, `.github/workflows/ci.yml`, `Package.swift`, `Tools/RepoTools/main.swift`, `Tools/RepoToolsSupport/Attestation.swift` and `Tools/RepoToolsSupport/Command.swift`. The predicate describes the observed environment associated with those configuration inputs, not the provenance or test status of a built app.
 
 - `recordedAt`: UTC collection timestamp.
 - `host`: operating system, CPU architecture and kernel release.
@@ -44,7 +44,7 @@ The subjects are the SHA-256 digests of the actual bytes of `flake.nix`, `flake.
 - `observations`: fixed tool/version, selected Swift path, simulator SDK/runtime inventory and Git revision/status probes. Each records the command, resolved executable, exit code, stdout and stderr.
 - `collectionSucceeded`: whether every probe completed successfully. An empty runtime inventory can still be collected successfully; this field does not mean UI tests passed or a simulator is installed.
 
-Each command has a 60-second timeout. Missing commands, timeouts and nonzero exits are recorded as failures; the script writes the incomplete statement and exits nonzero so CI can upload the evidence without treating collection as successful. Missing subject files fail collection because their digests cannot be supplied. This statement replaces the previous plain-text toolchain reports. Test logs and `.xcresult` bundles remain diagnostic artifacts.
+Each command has a 60-second timeout. Missing commands, timeouts and nonzero exits are recorded as failures; the collector writes the incomplete statement and exits nonzero so CI can upload the evidence without treating collection as successful. Missing subject files fail collection because their digests cannot be supplied. This statement replaces the previous plain-text toolchain reports. Test logs and `.xcresult` bundles remain diagnostic artifacts.
 
 ## AI evaluation acceptance
 
@@ -72,11 +72,10 @@ Begin parked. For road observations, a passenger/tester operates the app and rec
 
 ```bash
 nix develop
-python3 scripts/test-nix-shell.py
-python3 scripts/test-xcodegen.py
-python3 scripts/test-toolchain-attestation.py
-python3 scripts/record-toolchain.py
-python3 scripts/validate-repo.py
+swift run repo-tools check-toolchain
+swift run repo-tools check-xcodegen
+swift run repo-tools record-toolchain
+swift run repo-tools validate
 swift test
 xcodegen generate
 bash scripts/test-ios.sh

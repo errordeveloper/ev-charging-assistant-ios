@@ -7,31 +7,14 @@ cd "$repo_dir"
 
 command -v xcodebuild >/dev/null
 command -v xcodegen >/dev/null
-command -v python3 >/dev/null
+command -v swift >/dev/null
 xcodegen generate
 mkdir -p artifacts
 xcrun simctl list devices available --json > artifacts/simulators.json
 
 simulator_id="${IOS_SIMULATOR_UDID:-}"
 if [[ -z "$simulator_id" ]]; then
-  simulator_id="$(python3 - <<'PY'
-import json
-import re
-from pathlib import Path
-
-devices = json.loads(Path('artifacts/simulators.json').read_text())['devices']
-def version(runtime):
-    return tuple(int(v) for v in re.findall(r'\d+', runtime))
-for runtime in sorted(devices, key=version, reverse=True):
-    if '.iOS-' not in runtime:
-        continue
-    for device in devices[runtime]:
-        if device.get('isAvailable') and device['name'].startswith('iPhone'):
-            print(device['udid'])
-            raise SystemExit(0)
-raise SystemExit('No available iPhone simulator; install an iOS runtime in Xcode.')
-PY
-  )"
+  simulator_id="$(swift run repo-tools select-simulator)"
 fi
 
 xcrun simctl bootstatus "$simulator_id" -b
