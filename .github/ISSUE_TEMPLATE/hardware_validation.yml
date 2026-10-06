@@ -1,0 +1,24 @@
+name: Hardware validation
+description: Record a physical-device compatibility experiment
+title: '[Hardware] '
+body:
+  - type: textarea
+    id: tuple
+    attributes:
+      label: Tested phone/iOS, adapter/firmware, vehicle/year/software
+      description: Exclude VINs, private Bluetooth IDs, routes and credentials
+    validations:
+      required: true
+  - type: textarea
+    id: protocol
+    attributes:
+      label: Protocol/profile provenance and read-only allowlist
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Targets, actual measurements, failure cases and sanitized evidence
+      description: Use docs/evidence/HARDWARE_REPORT_TEMPLATE.md; incomplete results remain unverified
+    validations:
+      required: true

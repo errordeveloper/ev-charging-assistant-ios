@@ -1,0 +1,50 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  ios:
+    runs-on: macos-15
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: nix develop --no-update-lock-file --command bash -euo pipefail {0}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install Nix
+        uses: cachix/install-nix-action@b85815f71a6de0ddee80b8a80a98d43f4bcc66c7 # v31
+        with:
+          install_url: https://releases.nixos.org/nix/nix-2.31.2/install
+      - name: Validate flake outputs
+        shell: bash
+        run: nix flake check --no-update-lock-file --all-systems --no-build
+      - name: Record unsigned toolchain attestation
+        run: swift run repo-tools record-toolchain
+      - name: Verify Nix and Apple tool selection
+        run: swift run repo-tools check-toolchain
+      - name: Validate source contracts
+        run: swift run repo-tools validate
+      - name: Domain, stream-framing and repository tooling tests
+        run: swift test
+      - name: Project generator regression test
+        run: swift run repo-tools check-xcodegen
+      - name: Simulator UI tests
+        run: bash scripts/test-ios.sh
+      - name: Preserve test evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: ios-test-evidence-${{ github.sha }}
+          path: artifacts/
+          if-no-files-found: warn
+          retention-days: 14

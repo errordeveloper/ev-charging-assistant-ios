@@ -1,0 +1,172 @@
+[
+  {
+    "id": "EV-001",
+    "title": "[EV-001] Compile and pin the iOS foundation",
+    "dependsOn": [],
+    "body": "Run the scaffold on macOS, correct any generator/compiler/UI issues, pin a verified Xcode and XcodeGen setup, and configure required checks.",
+    "acceptanceCriteria": [
+      "Swift package and simulator UI tests pass for a recorded commit SHA.",
+      "Record actual compiler, SDK, runtime and generator versions; pin the validated Xcode/runtime while retaining the checked generator archive/checksum.",
+      "Review simulator screenshots and accessibility labels; configure branch rules if supported by the repository plan."
+    ]
+  },
+  {
+    "id": "EV-002",
+    "title": "[EV-002] Validate one BLE adapter and vehicle protocol",
+    "dependsOn": [
+      "EV-001"
+    ],
+    "body": "Complete the hardware feasibility experiment for one exact iPhone/adapter/EV tuple. The Enyaq and OBDLink CX are candidates only.",
+    "acceptanceCriteria": [
+      "Obtain documented third-party GATT/transport access and legitimate read-only SoC request/decoder provenance.",
+      "Record stationary GATT/session evidence, metric meaning and synchronized dashboard comparisons.",
+      "Complete a hardware report with failures and unknowns; do not mark unsupported or untested tuples verified."
+    ]
+  },
+  {
+    "id": "EV-003",
+    "title": "[EV-003] Implement a replay-tested Bluetooth diagnostic session",
+    "dependsOn": [
+      "EV-002"
+    ],
+    "body": "Separate Core Bluetooth effects, adapter transport and serialized diagnostic session. Preserve explicit user start/stop and bounded resource use.",
+    "acceptanceCriteria": [
+      "Handle permission/power/reset, connect failure, selection, notification fragmentation, timeout and cancellation.",
+      "One request in flight; allowlisted requests only; bounded buffers, retries and poll rate.",
+      "Late callbacks and reconnect buffers cannot update the wrong session; no traffic after stop.",
+      "Replay checks pass and a physical adapter session matches its documented transport."
+    ]
+  },
+  {
+    "id": "EV-004",
+    "title": "[EV-004] Ship the first read-only SoC vertical slice",
+    "dependsOn": [
+      "EV-003"
+    ],
+    "body": "Implement the verified vehicle profile, normalize SoC and timestamps, and show live/manual/stale states without hiding source provenance.",
+    "acceptanceCriteria": [
+      "Decoder preserves dashboard-vs-BMS semantics and validates range/units/profile version.",
+      "Replay fixtures cover success, malformed/unsupported response, wrong vehicle and invalid scaling.",
+      "Physical SoC comparison, foreground freshness and reconnect targets are measured and reported.",
+      "Unknown/stale states and explicit manual fallback work; compatibility record references a completed report."
+    ]
+  },
+  {
+    "id": "EV-005",
+    "title": "[EV-005] Characterize background, restoration and vehicle sleep",
+    "dependsOn": [
+      "EV-004"
+    ],
+    "body": "Test supported lifecycle behavior before advertising background battery telemetry. Implement only capabilities justified by physical evidence.",
+    "acceptanceCriteria": [
+      "Report locked/background, range loss, Bluetooth toggle, system termination, user force-quit and relaunch results.",
+      "Evaluate current iOS background APIs and the iOS 26 Live Activity option separately from minimum-OS behavior.",
+      "Measure vehicle/adapter sleep and 12V impact, including explicit stop; no unsupported permanent-polling claim.",
+      "Advertised conditions and compatibility records match measured results."
+    ]
+  },
+  {
+    "id": "EV-006",
+    "title": "[EV-006] Integrate a licensed UK charger data feed",
+    "dependsOn": [
+      "EV-001"
+    ],
+    "body": "Select a provider through data coverage/licensing tests and add charger map/search with provenance-aware tariff and availability states.",
+    "acceptanceCriteria": [
+      "Record coverage, data rights, auth, quotas, caching and freshness terms.",
+      "Normalize connectors, power, access, price/payment method, VAT/session/idle fees and timestamps.",
+      "Contract fixtures cover outages, unknown/stale availability, missing prices and rate limits.",
+      "Map/search UX and representative live UK data checks pass without invented values."
+    ]
+  },
+  {
+    "id": "EV-007",
+    "title": "[EV-007] Implement deterministic route and charging-stop planning",
+    "dependsOn": [
+      "EV-004",
+      "EV-006"
+    ],
+    "body": "Extend the energy experiment into a planner with real routes, usable capacity, consumption uncertainty, charger constraints and charge curves.",
+    "acceptanceCriteria": [
+      "Golden scenarios cover reserve, impossible legs, unavailable stops, unit conversion and charging taper.",
+      "Return assumptions, feasible alternatives and time/cost/arrival ranges; do not ask the model to do reserve math.",
+      "Replan on meaningful source/route changes with cancellation and debounce.",
+      "Compare predictions to measured pilot trips and document limitations."
+    ]
+  },
+  {
+    "id": "EV-008",
+    "title": "[EV-008] Build the provider and assistant backend contracts",
+    "dependsOn": [
+      "EV-001"
+    ],
+    "body": "Add a small backend with versioned schemas, scoped user sessions, secure secret storage and typed read-only tool endpoints.",
+    "acceptanceCriteria": [
+      "Provider/model credentials stay server-side; iOS session credentials use Keychain.",
+      "OpenAPI/JSON Schema contracts validate units, timestamps, identity and bounded inputs.",
+      "Contract tests exercise auth, revocation, quota/backoff, errors, redaction and deletion.",
+      "Routine PR CI uses fixtures without production credentials."
+    ]
+  },
+  {
+    "id": "EV-009",
+    "title": "[EV-009] Add optional cloud vehicle telemetry",
+    "dependsOn": [
+      "EV-008",
+      "EV-004"
+    ],
+    "body": "Choose an aggregator through exact-model coverage and terms evidence, implement OAuth linking, and reconcile local/cloud/manual telemetry.",
+    "acceptanceCriteria": [
+      "Demonstrate SoC read scope for the exact model and region using provider evidence; broader coverage remains qualified.",
+      "Keep original observation time; reject wrong-vehicle, future and age-unknown readings for live use.",
+      "Test refresh/revocation, offline/cache, stale cloud, 429 and source changes.",
+      "Unlink/delete removes credentials and linked data as documented."
+    ]
+  },
+  {
+    "id": "EV-010",
+    "title": "[EV-010] Implement the AI charging assistant with evaluated tools",
+    "dependsOn": [
+      "EV-007",
+      "EV-008"
+    ],
+    "body": "Implement bounded model interaction around typed deterministic tools and user-visible, sourced recommendations.",
+    "acceptanceCriteria": [
+      "Tools are scoped and recommendation-only; no arbitrary diagnostics, purchases or vehicle controls.",
+      "At least 40 versioned evaluation cases cover degraded, unknown, malicious and infeasible inputs.",
+      "Release set has zero fabricated battery/price/availability facts or vehicle-command attempts.",
+      "Streaming, cancellation, time/tool/spend budgets and safe unknown-state UX pass."
+    ]
+  },
+  {
+    "id": "EV-011",
+    "title": "[EV-011] Configure bounded issue-to-PR agent execution",
+    "dependsOn": [
+      "EV-001"
+    ],
+    "body": "Select a supported executor and implement explicitly triggered, isolated runs with evidence-backed repair/review and a private hardware gate.",
+    "acceptanceCriteria": [
+      "Trigger only from authorized tasks; create an isolated branch/worktree and record the input SHA.",
+      "Set time/tool/token/spend budgets and typed blocked/failed/ready outcomes.",
+      "Attach commands, results, screenshots, review evidence and resulting SHA to draft PRs.",
+      "Untrusted PRs receive no provider/signing/model/lab credentials; no automatic gate waiver."
+    ]
+  },
+  {
+    "id": "EV-012",
+    "title": "[EV-012] Deliver a physically validated TestFlight beta",
+    "dependsOn": [
+      "EV-005",
+      "EV-006",
+      "EV-007",
+      "EV-010"
+    ],
+    "body": "Complete product gates for the advertised local/manual charging assistant, sign and distribute a beta when Apple account access and distribution are authorized.",
+    "acceptanceCriteria": [
+      "Applicable domain, replay, contracts, UI and AI evaluation checks are green.",
+      "Every advertised hardware tuple and lifecycle condition has measured evidence.",
+      "Privacy/disclosures, accessibility, onboarding, deletion/revocation, failure recovery and install/upgrade checks pass.",
+      "Attach signed archive provenance, beta report, support matrix and known limits; cloud support is optional unless included in advertised scope."
+    ]
+  }
+]

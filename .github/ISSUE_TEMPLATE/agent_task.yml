@@ -1,0 +1,25 @@
+name: Agent development task
+description: A scoped implementation task with testable completion criteria
+title: '[Task] '
+body:
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Intended user behavior
+      description: Concrete trigger, expected result, and non-goals
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria and evidence
+      description: Software checks, hardware/provider gates, and what counts as done
+    validations:
+      required: true
+  - type: textarea
+    id: inputs
+    attributes:
+      label: Dependencies and execution inputs
+      description: Prior issues, protocol provenance, fixtures, account or device requirements
+    validations:
+      required: true
