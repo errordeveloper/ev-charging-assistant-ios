@@ -24,13 +24,27 @@ Replay tests should verify the expected read-only request sequence, exact bytes 
 
 ## CI and evidence
 
-The provided `ci.yml` runs repository structural validation, Swift package tests, XcodeGen, simulator UI tests, and stores Xcode results/tool versions on a macOS runner. It grants only `contents: read`; there are no signing/provider/model secrets. Uploads are diagnostic artifacts, not signed releases.
+The provided `ci.yml` installs a pinned Nix release, evaluates the locked flake for both Mac architectures, and runs repository structural validation, Swift package tests, XcodeGen and simulator UI tests inside `nix develop --no-update-lock-file`. It checks that supporting tools come from Nix and Apple build tools still come from the host. Xcode results and an unsigned toolchain attestation are stored on a macOS runner. It grants only `contents: read`; there are no signing/provider/model secrets. Uploads are diagnostic artifacts, not signed releases.
 
 `runs-on: macos-15` selects a GitHub-hosted Darwin/macOS machine. GitHub also documents explicit Intel labels such as `macos-15-intel` and newer macOS labels. The host runs Xcode/Swift and the iOS Simulator; it is not a physical iPhone or a vehicle Bluetooth lab. Keep software CI hosted and use a separate self-hosted Mac plus attached iPhone/adapter/EV for physical acceptance tests. Runner details: [GitHub-hosted runners](https://docs.github.com/en/actions/reference/runners/github-hosted-runners) and [macOS image inventory](https://github.com/actions/runner-images/tree/main/images/macos).
 
 The generator archive/checksum and Actions commits are pinned. After the first green run, pin the exact verified Xcode/runtime, add dependency-update checks, and configure required branch checks. Avoid `pull_request_target` for untrusted code with secrets. A provider test with real credentials is a separate trusted job, never a condition for routine replay tests.
 
 Future agent jobs must attach the issue/commit SHA and evidence manifest. Hardware jobs are manually triggered on a private, supervised lab runner. Capture originals remain private. Failures update the issue/PR status; a repair loop cannot waive a missing physical gate.
+
+### Toolchain attestation v1
+
+`python3 scripts/record-toolchain.py` writes `artifacts/toolchain.intoto.json`, a single unsigned JSON [in-toto Statement v1](https://github.com/in-toto/attestation/blob/main/spec/v1/statement.md). It uses the custom predicate type URI `https://github.com/errordeveloper/ev-charging-assistant-ios/attestations/toolchain/v1`, defined here. It has no signing envelope or signatures.
+
+The subjects are the SHA-256 digests of the actual bytes of `flake.nix`, `flake.lock`, `nix/xcodegen.nix`, `config/toolchain.json`, `.github/workflows/ci.yml` and the collector script. The predicate describes the observed environment associated with those configuration inputs, not the provenance or test status of a built app.
+
+- `recordedAt`: UTC collection timestamp.
+- `host`: operating system, CPU architecture and kernel release.
+- `environment`: only the allowlisted Xcode selection and GitHub run metadata; credentials and the rest of the environment are excluded.
+- `observations`: fixed tool/version, selected Swift path, simulator SDK/runtime inventory and Git revision/status probes. Each records the command, resolved executable, exit code, stdout and stderr.
+- `collectionSucceeded`: whether every probe completed successfully. An empty runtime inventory can still be collected successfully; this field does not mean UI tests passed or a simulator is installed.
+
+Each command has a 60-second timeout. Missing commands, timeouts and nonzero exits are recorded as failures; the script writes the incomplete statement and exits nonzero so CI can upload the evidence without treating collection as successful. Missing subject files fail collection because their digests cannot be supplied. This statement replaces the previous plain-text toolchain reports. Test logs and `.xcresult` bundles remain diagnostic artifacts.
 
 ## AI evaluation acceptance
 
@@ -57,7 +71,12 @@ Begin parked. For road observations, a passenger/tester operates the app and rec
 ## Commands
 
 ```bash
-python3 scripts/validate_repo.py
+nix develop
+python3 scripts/test-nix-shell.py
+python3 scripts/test-xcodegen.py
+python3 scripts/test-toolchain-attestation.py
+python3 scripts/record-toolchain.py
+python3 scripts/validate-repo.py
 swift test
 xcodegen generate
 bash scripts/test-ios.sh

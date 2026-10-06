@@ -7,7 +7,7 @@ Build an iOS EV charging and route-planning assistant with measured Bluetooth te
 ## Commands
 
 ```bash
-python3 scripts/validate_repo.py
+python3 scripts/validate-repo.py
 swift test
 xcodegen generate
 bash scripts/test-ios.sh
@@ -15,6 +15,8 @@ git diff --check
 ```
 
 Swift tests require Swift 6. App and UI tests require macOS/Xcode. If a tool is unavailable, report the check as not run; never manufacture logs or substitute source inspection for a passed build.
+
+Use kebab-case for script filenames, for example `record-toolchain.py`.
 
 ## Implementation loop
 

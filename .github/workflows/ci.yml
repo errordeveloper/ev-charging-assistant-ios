@@ -13,27 +13,31 @@ jobs:
   ios:
     runs-on: macos-15
     timeout-minutes: 30
+    defaults:
+      run:
+        shell: nix develop --no-update-lock-file --command bash -euo pipefail {0}
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: Record toolchain
-        run: |
-          mkdir -p artifacts
-          xcodebuild -version > artifacts/toolchain.txt
-          swift --version >> artifacts/toolchain.txt
-          python3 --version >> artifacts/toolchain.txt
+      - name: Install Nix
+        uses: cachix/install-nix-action@b85815f71a6de0ddee80b8a80a98d43f4bcc66c7 # v31
+        with:
+          install_url: https://releases.nixos.org/nix/nix-2.31.2/install
+      - name: Validate flake outputs
+        shell: bash
+        run: nix flake check --no-update-lock-file --all-systems --no-build
+      - name: Record unsigned toolchain attestation
+        run: python3 scripts/record-toolchain.py
+      - name: Verify Nix and Apple tool selection
+        run: python3 scripts/test-nix-shell.py
+      - name: Attestation collector tests
+        run: python3 scripts/test-toolchain-attestation.py
       - name: Validate source contracts
-        run: python3 scripts/validate_repo.py
+        run: python3 scripts/validate-repo.py
       - name: Domain and stream-framing tests
         run: swift test
-      - name: Install project generator
-        run: |
-          bash scripts/install-xcodegen.sh
-          echo "$PWD/.tools/xcodegen/bin" >> "$GITHUB_PATH"
-          export PATH="$PWD/.tools/xcodegen/bin:$PATH"
-          xcodegen --version >> artifacts/toolchain.txt
       - name: Project generator regression test
         run: python3 scripts/test-xcodegen.py
       - name: Simulator UI tests

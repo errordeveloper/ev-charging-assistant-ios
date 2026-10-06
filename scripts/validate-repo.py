@@ -13,9 +13,16 @@ required = [
     'Apps/EVChargingAssistant/EVChargingAssistantApp.swift',
     'Apps/EVChargingAssistant/BluetoothScanner.swift',
     'UITests/DashboardUITests.swift', 'config/compatibility.json',
+    'flake.nix', 'flake.lock', 'nix/xcodegen.nix', 'scripts/test-nix-shell.py',
+    'scripts/record-toolchain.py', 'scripts/test-toolchain-attestation.py',
 ]
 for name in required:
     assert (ROOT / name).is_file(), f'Missing {name}'
+
+for script in (ROOT / 'scripts').iterdir():
+    if script.is_file():
+        assert re.fullmatch(r'[a-z0-9]+(?:-[a-z0-9]+)*\.(py|sh)', script.name), \
+            f'Script filenames must use kebab-case: {script.name}'
 
 for path in ROOT.rglob('*.md'):
     if '.git' in path.parts:
@@ -47,12 +54,19 @@ workflow = (ROOT / '.github/workflows/ci.yml').read_text()
 toolchain = json.loads((ROOT / 'config/toolchain.json').read_text())
 assert toolchain['actions']['checkout'] in workflow
 assert toolchain['actions']['uploadArtifact'] in workflow
+assert toolchain['actions']['installNix'] in workflow
+assert f'nix-{toolchain["nixVersion"]}/install' in workflow
 assert toolchain['xcodegen']['version'] in project
 assert re.fullmatch(r'[0-9a-f]{64}', toolchain['xcodegen']['sha256'])
 assert 'pull_request_target' not in workflow
 assert 'contents: read' in workflow
 for action in re.findall(r'uses:\s+([^\s#]+)', workflow):
     assert re.fullmatch(r'[^@]+@[0-9a-f]{40}', action), f'Unpinned action: {action}'
+
+flake_lock = json.loads((ROOT / 'flake.lock').read_text())
+locked_nixpkgs = flake_lock['nodes']['nixpkgs']['locked']
+assert re.fullmatch(r'[0-9a-f]{40}', locked_nixpkgs['rev']), 'Nixpkgs must be commit-pinned'
+assert locked_nixpkgs['narHash'].startswith('sha256-'), 'Nixpkgs must be content-hashed'
 
 issues = json.loads((ROOT / '.github/backlog.json').read_text())
 ids = {issue['id'] for issue in issues}

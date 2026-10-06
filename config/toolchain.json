@@ -1,6 +1,7 @@
 {
-  "checkedAt": "2026-10-01",
+  "checkedAt": "2026-10-06",
   "xcode": null,
+  "nixVersion": "2.31.2",
   "swiftLanguageVersion": "6.0",
   "minimumIOS": "18.0",
   "xcodegen": {
@@ -10,6 +11,7 @@
   },
   "actions": {
     "checkout": "3d3c42e5aac5ba805825da76410c181273ba90b1",
-    "uploadArtifact": "043fb46d1a93c77aae656e7c1c64a875d1fc6a0a"
+    "uploadArtifact": "043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
+    "installNix": "b85815f71a6de0ddee80b8a80a98d43f4bcc66c7"
   }
 }
