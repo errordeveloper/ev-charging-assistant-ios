@@ -37,5 +37,10 @@ if len(candidates) != 1:
 print(candidates[0])
 PY
 )"
+# XcodeGen loads build-setting presets relative to its installed executable.
+# Keep the archive's bin/ and share/ layout; the binary alone is incomplete.
+presets_path="$(dirname -- "$(dirname -- "$binary_path")")/share/xcodegen/SettingPresets"
+mkdir -p .tools/xcodegen/share/xcodegen
+cp -R "$presets_path" .tools/xcodegen/share/xcodegen/
 install -m 755 "$binary_path" .tools/xcodegen/bin/xcodegen
 .tools/xcodegen/bin/xcodegen --version

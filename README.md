@@ -21,6 +21,7 @@ Use Xcode with Swift 6 and an iOS 18+ SDK/runtime, Python 3, and [XcodeGen](http
 ```bash
 bash scripts/install-xcodegen.sh
 export PATH="$PWD/.tools/xcodegen/bin:$PATH"
+python3 scripts/test-xcodegen.py
 swift test
 python3 scripts/validate_repo.py
 xcodegen generate
@@ -30,6 +31,8 @@ open EVChargingAssistant.xcodeproj
 Choose your Apple development team in Xcode for a physical iPhone. Simulator runs need no signing. Run `bash scripts/test-ios.sh` for simulator UI tests. Bluetooth discovery requires a physical iPhone for the hardware acceptance gate; simulator tests use manual/demo inputs and disable discovery through `-uitesting`.
 
 No API credentials are needed for this scaffold. Generated Xcode project files and raw private lab evidence stay out of version control.
+
+The XcodeGen installer preserves both the executable and its bundled setting presets. `python3 scripts/test-xcodegen.py` generates an isolated sample project and checks its build defaults before CI starts a simulator; it does not compile the app or run UI tests.
 
 ## Development documents
 

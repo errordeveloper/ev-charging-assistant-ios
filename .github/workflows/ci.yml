@@ -34,6 +34,8 @@ jobs:
           echo "$PWD/.tools/xcodegen/bin" >> "$GITHUB_PATH"
           export PATH="$PWD/.tools/xcodegen/bin:$PATH"
           xcodegen --version >> artifacts/toolchain.txt
+      - name: Project generator regression test
+        run: python3 scripts/test-xcodegen.py
       - name: Simulator UI tests
         run: bash scripts/test-ios.sh
       - name: Preserve test evidence
