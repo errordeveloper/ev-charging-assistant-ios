@@ -1,5 +1,11 @@
+#if canImport(CryptoKit)
 import CryptoKit
+#endif
+#if canImport(Darwin)
 import Darwin
+#else
+import Glibc
+#endif
 import Foundation
 
 public struct ToolchainStatement: Codable, Equatable {
@@ -69,5 +75,27 @@ public enum Attestation {
 }
 
 func sha256(_ file: URL) throws -> String {
-    SHA256.hash(data: try Data(contentsOf: file)).map { String(format: "%02x", $0) }.joined()
+    #if canImport(CryptoKit)
+    return SHA256.hash(data: try Data(contentsOf: file)).map { String(format: "%02x", $0) }.joined()
+    #else
+    // GNU coreutils is supplied by the Linux development shell. Pass bytes on
+    // stdin so filenames cannot affect sha256sum's output or option parsing.
+    let input = try FileHandle(forReadingFrom: file)
+    defer { try? input.close() }
+    let process = Process()
+    let output = Pipe()
+    let runner = CommandRunner(root: file.deletingLastPathComponent())
+    guard let executable = runner.executable("sha256sum") else {
+        throw ToolError("Missing sha256sum; enter the Linux Nix development shell")
+    }
+    process.executableURL = URL(fileURLWithPath: executable)
+    process.standardInput = input
+    process.standardOutput = output
+    try process.run()
+    let data = output.fileHandleForReading.readDataToEndOfFile()
+    process.waitUntilExit()
+    let digest = String(decoding: data, as: UTF8.self).components(separatedBy: " ")[0]
+    try require(process.terminationStatus == 0 && matches(digest, "^[0-9a-f]{64}$"), "sha256sum failed")
+    return digest
+    #endif
 }

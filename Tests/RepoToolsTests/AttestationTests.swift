@@ -72,3 +72,15 @@ private func collect(_ root: URL, failed: Bool = false) throws -> ToolchainState
     try FileManager.default.removeItem(at: fixture.url.appendingPathComponent("flake.lock"))
     #expect(throws: (any Error).self) { try collect(fixture.url) }
 }
+
+@Test func hashingHandlesEmptyAndBinaryFilesWithUnusualNames() throws {
+    let fixture = try TemporaryDirectory(prefix: "hash-fixture")
+    defer { fixture.remove() }
+    let file = fixture.url.appendingPathComponent("- bytes\nwith spaces")
+    try Data().write(to: file)
+    #expect(try sha256(file) == "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")
+    try Data([0, 255, 10, 128]).write(to: file)
+    #expect(try sha256(file) == "2d75f84de96be6dba9b1e48d2994df26ede680ad1f7cfb0263d1252f08655694")
+    try FileManager.default.removeItem(at: file)
+    #expect(throws: (any Error).self) { try sha256(file) }
+}

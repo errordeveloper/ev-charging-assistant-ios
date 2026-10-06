@@ -1,3 +1,20 @@
+# Linux cloud validation (2026-10-06)
+
+The x86_64 Linux flake shell was executed on Debian 13 using Nix 2.20.6 from checksum-pinned nix-portable v012 and the checksum-pinned official Swift 6.0.3 release. Nix mapped its store through bubblewrap; user namespaces required execution outside the command sandbox. CI continues to install Nix 2.31.2.
+
+- `nix flake check --no-update-lock-file --all-systems --no-build`: passed for x86_64 Linux and both Darwin architectures. Darwin outputs were evaluated, not built or tested on this host.
+- `nix develop --no-update-lock-file --command swift test --jobs 4`: clean build passed all 26 Swift Testing tests (10 EVCore and 16 repository-tooling tests). The XCTest compatibility runner's zero-test line is separate from the completed Swift Testing suite.
+- `swift run repo-tools check-toolchain` inside the Nix shell: passed Linux Nix provenance and minimum Swift checks.
+- `swift run repo-tools validate` inside the Nix shell: passed repository contracts and links.
+- `actionlint .github/workflows/ci.yml` from the locked Nixpkgs commit: passed. The added Linux CI job has not been executed remotely.
+- Shell syntax and `git diff --check`: passed.
+
+SwiftPM commands used `--scratch-path .build/nix-linux --cache-path .build/swiftpm-cache --config-path .build/swiftpm-config --security-path .build/swiftpm-security` on this read-only-home cloud host. The Nix shell supplies compiler cache paths under `.build/`, portable Darwin/Glibc imports, GNU SHA-256 hashing on Linux, and Nix's Clang linker wrapper so generated binaries use the same libc/loader as the Swift runtime. The original bundled Clang produced a crashing manifest executable by mixing the host loader with Nix libraries; the wrapper correction was verified by the clean package build and tests.
+
+The lockfile and macOS package/shell derivations are unchanged. Linux ARM64, LLDB, iOS cross-compilation, app/UI execution, hardware and Apple-toolchain attestation remain outside this Linux workflow. Xcode and Apple SDKs are still required on macOS. No claim of a macOS build or hardware validation is made by these results.
+
+---
+
 # Bootstrap validation
 
 ## EV-001 follow-up: Swift repository tooling (2026-10-06)

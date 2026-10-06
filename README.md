@@ -14,6 +14,22 @@ This is a development bootstrap, not a finished charging app. It includes:
 
 **No vehicle, adapter, battery decoder, cloud provider, charger feed, or AI service is validated or integrated yet.** Demo data never counts as evidence of hardware support. The energy experiment is not turn-by-turn routing or a charger-stop optimizer.
 
+## Run package tests on Linux
+
+On x86_64 Linux, install Nix with the `nix-command` and `flakes` features enabled, then run:
+
+```bash
+nix develop --no-update-lock-file --command swift run repo-tools check-toolchain
+nix develop --no-update-lock-file --command swift test --jobs 4
+nix develop --no-update-lock-file --command swift run repo-tools validate
+```
+
+The Linux shell supplies a checksum-pinned official Swift 6.0.3 toolchain, Git, Clang and GNU coreutils. The locked Nixpkgs Swift compiler is 5.10.1, below this package's Swift 6 requirement. Linux uses `sha256sum` for repository-tool hashing; macOS continues using CryptoKit. Neither platform needs third-party Swift package dependencies. Linux ARM64 is not currently exposed by the flake. The Linux package omits the upstream LLDB debugger, whose Ubuntu-specific dependencies are outside this compiler/test workflow.
+
+The shell defaults compiler caches to the ignored `.build/` directory. If your cloud machine's home directory is read-only, append `--cache-path .build/swiftpm-cache --config-path .build/swiftpm-config --security-path .build/swiftpm-security` to SwiftPM commands.
+
+Linux can compile EVCore and repository tools and execute their unit tests. SwiftUI, Core Bluetooth, Xcode project generation, simulator UI tests and the Apple-toolchain attestation remain macOS workflows. This shell does not supply Apple SDKs or an iOS cross-compilation environment; building the iOS app still requires Xcode on a Mac. No API credentials or services are needed for package tests.
+
 ## Run on a Mac
 
 Install Xcode with Swift 6 and an iOS 18+ SDK/runtime, plus [Nix](https://nixos.org/download/) with the `nix-command` and `flakes` features enabled. Nix 2.31.2 is used in CI. The flake supports Apple Silicon and Intel Macs and supplies Git and [XcodeGen](https://github.com/yonaskolb/XcodeGen) 2.46.0. `flake.lock` pins Nixpkgs; `config/toolchain.json` pins the generator archive/checksum and CI installer/Actions versions.
@@ -48,7 +64,7 @@ No API credentials are needed for this scaffold. Generated Xcode project files a
 
 The Nix XcodeGen package preserves both the executable and its bundled setting presets. `swift run repo-tools check-xcodegen` generates an isolated sample project and checks its build defaults before CI starts a simulator; it does not compile the app or run UI tests. The standalone `scripts/install-xcodegen.sh` remains available for setups without Nix; add `.tools/xcodegen/bin` to `PATH` after running it. It uses the same Swift helper and requires Xcode with Swift 6.
 
-Repository automation lives in the `repo-tools` SwiftPM executable, using Foundation and CryptoKit without third-party package dependencies. `swift run repo-tools --help` lists its commands; SwiftPM compiles it on first use and reuses the build. `swift test` covers both EVCore and the tooling. The tooling targets are separate from the EVCore library used by the app.
+Repository automation lives in the `repo-tools` SwiftPM executable, using Foundation and platform hashing without third-party package dependencies. `swift run repo-tools --help` lists its commands; SwiftPM compiles it on first use and reuses the build. `swift test` covers both EVCore and the tooling. The tooling targets are separate from the EVCore library used by the app.
 
 ## Development documents
 
