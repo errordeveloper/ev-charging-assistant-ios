@@ -1,0 +1,46 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  ios:
+    runs-on: macos-15
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Record toolchain
+        run: |
+          mkdir -p artifacts
+          xcodebuild -version > artifacts/toolchain.txt
+          swift --version >> artifacts/toolchain.txt
+          python3 --version >> artifacts/toolchain.txt
+      - name: Validate source contracts
+        run: python3 scripts/validate_repo.py
+      - name: Domain and stream-framing tests
+        run: swift test
+      - name: Install project generator
+        run: |
+          bash scripts/install-xcodegen.sh
+          echo "$PWD/.tools/xcodegen/bin" >> "$GITHUB_PATH"
+          export PATH="$PWD/.tools/xcodegen/bin:$PATH"
+          xcodegen --version >> artifacts/toolchain.txt
+      - name: Simulator UI tests
+        run: bash scripts/test-ios.sh
+      - name: Preserve test evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: ios-test-evidence-${{ github.sha }}
+          path: artifacts/
+          if-no-files-found: warn
+          retention-days: 14

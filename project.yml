@@ -1,0 +1,55 @@
+name: EVChargingAssistant
+options:
+  minimumXcodeGenVersion: 2.46.0
+  deploymentTarget:
+    iOS: '18.0'
+settings:
+  base:
+    SWIFT_VERSION: '6.0'
+    SWIFT_STRICT_CONCURRENCY: complete
+    MARKETING_VERSION: '0.1.0'
+    CURRENT_PROJECT_VERSION: '1'
+packages:
+  EVCore:
+    path: .
+targets:
+  EVChargingAssistant:
+    type: application
+    platform: iOS
+    sources:
+      - path: Apps/EVChargingAssistant
+    info:
+      path: Apps/EVChargingAssistant/Info.plist
+      properties:
+        CFBundleDisplayName: EV Charging Assistant
+        NSBluetoothAlwaysUsageDescription: Discover a Bluetooth adapter you choose for vehicle telemetry.
+        UILaunchScreen: {}
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: dev.errordeveloper.evchargingassistant
+        GENERATE_INFOPLIST_FILE: false
+        TARGETED_DEVICE_FAMILY: '1'
+        CODE_SIGN_STYLE: Automatic
+    dependencies:
+      - package: EVCore
+        product: EVCore
+  EVChargingAssistantUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - path: UITests
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: dev.errordeveloper.evchargingassistant.uitests
+        GENERATE_INFOPLIST_FILE: true
+    dependencies:
+      - target: EVChargingAssistant
+schemes:
+  EVChargingAssistant:
+    build:
+      targets:
+        EVChargingAssistant: all
+        EVChargingAssistantUITests: [test]
+    test:
+      targets:
+        - EVChargingAssistantUITests

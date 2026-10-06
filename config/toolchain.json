@@ -1,0 +1,15 @@
+{
+  "checkedAt": "2026-10-01",
+  "xcode": null,
+  "swiftLanguageVersion": "6.0",
+  "minimumIOS": "18.0",
+  "xcodegen": {
+    "version": "2.46.0",
+    "url": "https://github.com/yonaskolb/XcodeGen/releases/download/2.46.0/xcodegen.zip",
+    "sha256": "4d9e34b62172d645eed6457cac13fc222569974098ef4ee9c3368bedf0196806"
+  },
+  "actions": {
+    "checkout": "3d3c42e5aac5ba805825da76410c181273ba90b1",
+    "uploadArtifact": "043fb46d1a93c77aae656e7c1c64a875d1fc6a0a"
+  }
+}

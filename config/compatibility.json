@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "updatedAt": "2026-10-01",
+  "profiles": [
+    {
+      "id": "enyaq-pilot-candidate",
+      "status": "unverified",
+      "vehicle": {
+        "make": "Skoda",
+        "model": "Enyaq",
+        "modelYear": null,
+        "softwareVersion": null
+      },
+      "adapter": {
+        "candidateModel": "OBDLink CX",
+        "firmwareVersion": null,
+        "transport": "ble",
+        "serviceUUIDs": [],
+        "characteristics": []
+      },
+      "metric": "stateOfCharge",
+      "metricSemantics": null,
+      "readCommands": [],
+      "scaling": null,
+      "evidenceReport": null,
+      "notes": "Pilot proposal only; no protocol or vehicle support is claimed."
+    }
+  ]
+}
