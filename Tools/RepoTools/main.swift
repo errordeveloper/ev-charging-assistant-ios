@@ -59,7 +59,9 @@ func main() throws -> Int32 {
         let statement = try Attestation.collect(root: root, run: { runner.run($0) })
         let status = try statement.write(to: output)
         print("Wrote unsigned toolchain statement to \(output.path)")
-        if status != 0 { print("Toolchain collection was incomplete; inspect the recorded command errors.") }
+        if status != 0 {
+            FileHandle.standardError.write(Data("Toolchain collection was incomplete:\n\(statement.failureDiagnostics)\n".utf8))
+        }
         return status
     case "select-simulator":
         let input = URL(fileURLWithPath: values["--input"] ?? "artifacts/simulators.json", relativeTo: root)

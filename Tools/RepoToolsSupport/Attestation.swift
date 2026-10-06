@@ -25,6 +25,17 @@ public struct ToolchainStatement: Codable, Equatable {
     public var predicateType = "https://github.com/errordeveloper/ev-charging-assistant-ios/attestations/toolchain/v1"
     public var predicate: Predicate
 
+    public var failureDiagnostics: String {
+        predicate.observations.keys.sorted().compactMap { name in
+            guard let observation = predicate.observations[name], observation.exitCode != 0 else { return nil }
+            let stderr = observation.stderr.trimmingCharacters(in: .whitespacesAndNewlines)
+            let stdout = observation.stdout.trimmingCharacters(in: .whitespacesAndNewlines)
+            let detail = stderr.isEmpty ? stdout : stderr
+            let heading = "\(name): \(observation.command.joined(separator: " ")) exited \(observation.exitCode)"
+            return detail.isEmpty ? heading : "\(heading)\n\(detail)"
+        }.joined(separator: "\n")
+    }
+
     public func write(to output: URL) throws -> Int32 {
         try FileManager.default.createDirectory(at: output.deletingLastPathComponent(), withIntermediateDirectories: true)
         try jsonData(self).write(to: output, options: .atomic)
