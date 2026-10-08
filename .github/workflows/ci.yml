@@ -26,11 +26,11 @@ jobs:
         with:
           install_url: https://releases.nixos.org/nix/nix-2.31.2/install
       - name: Verify Linux toolchain
-        run: swift run repo-tools check-toolchain
+        run: swift run --disable-index-store repo-tools check-toolchain
       - name: Validate source contracts
-        run: swift run repo-tools validate
+        run: swift run --disable-index-store repo-tools validate
       - name: Domain and repository tooling tests
-        run: swift test --jobs 4
+        run: swift test --disable-index-store --jobs 4
   ios:
     runs-on: macos-15
     timeout-minutes: 30

@@ -8,7 +8,7 @@ This is a development bootstrap, not a finished charging app. It includes:
 
 - SwiftUI battery dashboard with explicitly labeled manual and demo inputs.
 - Bounded, foreground Core Bluetooth discovery. No connection or vehicle commands yet.
-- A dependency-free Swift package for validated telemetry, freshness/source selection, a constant-consumption energy estimator, and bounded ASCII response framing.
+- A dependency-free EVCore library for validated telemetry, freshness/source selection, a constant-consumption energy estimator, and bounded ASCII response framing.
 - Domain tests, two simulator UI tests, macOS CI, project generation, and an agent implementation contract.
 - An end-to-end roadmap and a hardware evidence template.
 
@@ -19,12 +19,14 @@ This is a development bootstrap, not a finished charging app. It includes:
 On x86_64 Linux, install Nix with the `nix-command` and `flakes` features enabled, then run:
 
 ```bash
-nix develop --no-update-lock-file --command swift run repo-tools check-toolchain
-nix develop --no-update-lock-file --command swift test --jobs 4
-nix develop --no-update-lock-file --command swift run repo-tools validate
+nix develop --no-update-lock-file --command swift run --disable-index-store repo-tools check-toolchain
+nix develop --no-update-lock-file --command swift test --disable-index-store --jobs 4
+nix develop --no-update-lock-file --command swift run --disable-index-store repo-tools validate
 ```
 
-The Linux shell supplies a checksum-pinned official Swift 6.0.3 toolchain, Git, Clang and GNU coreutils. The locked Nixpkgs Swift compiler is 5.10.1, below this package's Swift 6 requirement. Linux uses `sha256sum` for repository-tool hashing; macOS continues using CryptoKit. Neither platform needs third-party Swift package dependencies. Linux ARM64 is not currently exposed by the flake. The Linux package omits the upstream LLDB debugger, whose Ubuntu-specific dependencies are outside this compiler/test workflow.
+The Linux shell supplies a checksum-pinned official Swift 6.0.3 toolchain, Git, Clang and GNU coreutils. The locked Nixpkgs Swift compiler is 5.10.1, below this package's Swift 6 requirement. Repository-tool hashing uses Apple’s Swift Crypto 4.3.1 (`Crypto`) on Linux and system CryptoKit on macOS, with the same in-process `SHA256` API. Swift Crypto is pinned to the latest release supporting this Swift 6.0 toolchain; newer releases require Swift 6.1 or 6.2. EVCore remains dependency-free, and the crypto dependency is only linked into Linux repository tooling. Linux ARM64 is not currently exposed by the flake. The Linux package omits the upstream LLDB debugger, whose Ubuntu-specific dependencies are outside this compiler/test workflow.
+
+Linux test commands disable SwiftPM’s optional index store because the Nix Clang wrapper does not support the Swift-specific C indexing flag. Compilation and test assertions still run normally.
 
 The shell defaults compiler caches to the ignored `.build/` directory. If your cloud machine's home directory is read-only, append `--cache-path .build/swiftpm-cache --config-path .build/swiftpm-config --security-path .build/swiftpm-security` to SwiftPM commands.
 
@@ -64,7 +66,7 @@ No API credentials are needed for this scaffold. Generated Xcode project files a
 
 The Nix XcodeGen package preserves both the executable and its bundled setting presets. `swift run repo-tools check-xcodegen` generates an isolated sample project and checks its build defaults before CI starts a simulator; it does not compile the app or run UI tests. The standalone `scripts/install-xcodegen.sh` remains available for setups without Nix; add `.tools/xcodegen/bin` to `PATH` after running it. It uses the same Swift helper and requires Xcode with Swift 6.
 
-Repository automation lives in the `repo-tools` SwiftPM executable, using Foundation and platform hashing without third-party package dependencies. `swift run repo-tools --help` lists its commands; SwiftPM compiles it on first use and reuses the build. `swift test` covers both EVCore and the tooling. The tooling targets are separate from the EVCore library used by the app.
+Repository automation lives in the `repo-tools` SwiftPM executable, using Foundation and in-process SHA-256 (system CryptoKit on Apple platforms; Swift Crypto on Linux). `swift run repo-tools --help` lists its commands; SwiftPM compiles it on first use and reuses the build. `swift test` covers both EVCore and the tooling. The tooling targets are separate from the EVCore library used by the app.
 
 ## Development documents
 

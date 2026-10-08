@@ -1,3 +1,11 @@
+# In-process Linux hashing follow-up (2026-10-08)
+
+Linux repository tooling now uses pinned Swift Crypto 4.3.1 through the `Crypto` module; macOS continues using system CryptoKit. Both paths call `SHA256.hash` directly. No hash subprocess is launched, and EVCore has no crypto dependency. `Package.resolved` pins Swift Crypto and its transitive Swift ASN.1 dependency.
+
+All 27 unit tests passed in the Linux Nix shell with Swift 6.0.3 and `swift test --disable-index-store --jobs 4`, including known SHA-256 vectors, unusual filenames, missing-file handling and checksum rejection. Linux SwiftPM commands disable optional index-store generation because upstream Nix Clang does not support Swift's C indexing flag. macOS validation is left to CI.
+
+---
+
 # Linux cloud validation (2026-10-06)
 
 The x86_64 Linux flake shell was executed on Debian 13 using Nix 2.20.6 from checksum-pinned nix-portable v012 and the checksum-pinned official Swift 6.0.3 release. Nix mapped its store through bubblewrap; user namespaces required execution outside the command sandbox. CI continues to install Nix 2.31.2.
@@ -9,7 +17,7 @@ The x86_64 Linux flake shell was executed on Debian 13 using Nix 2.20.6 from che
 - `actionlint .github/workflows/ci.yml` from the locked Nixpkgs commit: passed. The added Linux CI job has not been executed remotely.
 - Shell syntax and `git diff --check`: passed.
 
-SwiftPM commands used `--scratch-path .build/nix-linux --cache-path .build/swiftpm-cache --config-path .build/swiftpm-config --security-path .build/swiftpm-security` on this read-only-home cloud host. The Nix shell supplies compiler cache paths under `.build/`, portable Darwin/Glibc imports, GNU SHA-256 hashing on Linux, and Nix's Clang linker wrapper so generated binaries use the same libc/loader as the Swift runtime. The original bundled Clang produced a crashing manifest executable by mixing the host loader with Nix libraries; the wrapper correction was verified by the clean package build and tests.
+SwiftPM commands used `--scratch-path .build/nix-linux --cache-path .build/swiftpm-cache --config-path .build/swiftpm-config --security-path .build/swiftpm-security` on this read-only-home cloud host. The Nix shell supplies compiler cache paths under `.build/`, portable Darwin/Glibc imports, GNU SHA-256 hashing on Linux at that revision (subsequently replaced with in-process Swift Crypto), and Nix's Clang linker wrapper so generated binaries use the same libc/loader as the Swift runtime. The original bundled Clang produced a crashing manifest executable by mixing the host loader with Nix libraries; the wrapper correction was verified by the clean package build and tests.
 
 The lockfile and macOS package/shell derivations are unchanged. Linux ARM64, LLDB, iOS cross-compilation, app/UI execution, hardware and Apple-toolchain attestation remain outside this Linux workflow. Xcode and Apple SDKs are still required on macOS. No claim of a macOS build or hardware validation is made by these results.
 

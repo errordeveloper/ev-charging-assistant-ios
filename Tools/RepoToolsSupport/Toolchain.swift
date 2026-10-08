@@ -2,7 +2,7 @@ import Foundation
 
 public func checkToolchain(root: URL, runner: CommandRunner) throws {
     #if os(Linux)
-    for name in ["git", "swift", "swiftc", "sha256sum"] {
+    for name in ["git", "swift", "swiftc"] {
         guard let executable = runner.executable(name) else { throw ToolError("Missing \(name)") }
         let resolved = URL(fileURLWithPath: executable).resolvingSymlinksInPath().path
         try require(resolved.hasPrefix("/nix/store/"), "\(name) must come from Nix: \(resolved)")
@@ -14,7 +14,7 @@ public func checkToolchain(root: URL, runner: CommandRunner) throws {
     }
     try require(version.compare(config.swiftLanguageVersion, options: .numeric) != .orderedAscending,
                 "Swift \(config.swiftLanguageVersion)+ is required")
-    print("Toolchain checks passed: Nix Git, Swift and coreutils for Linux package tests. iOS builds require macOS/Xcode.")
+    print("Toolchain checks passed: Nix Git and Swift for Linux package tests. iOS builds require macOS/Xcode.")
     #else
     for name in ["git", "xcodegen"] {
         guard let executable = runner.executable(name) else { throw ToolError("Missing \(name)") }
