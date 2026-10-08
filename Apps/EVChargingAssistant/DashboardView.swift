@@ -86,6 +86,14 @@ struct DashboardView: View {
                 }
             }
             .navigationTitle("EV Charging Assistant")
+            .toolbar {
+                NavigationLink {
+                    AccessoryInspectionView()
+                } label: {
+                    Label("Inspect accessories", systemImage: "cable.connector")
+                }
+                .accessibilityIdentifier("inspectAccessories")
+            }
         }
         .onChange(of: scenePhase) { _, phase in
             if phase != .active { bluetooth.stop() }

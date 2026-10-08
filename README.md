@@ -8,8 +8,9 @@ This is a development bootstrap, not a finished charging app. It includes:
 
 - SwiftUI battery dashboard with explicitly labeled manual and demo inputs.
 - Bounded, foreground Core Bluetooth discovery. No connection or vehicle commands yet.
+- On-demand External Accessory inspection with visible metadata/protocols and audio-route clues. This does not read raw iAP2 messages or vehicle battery data. See [inspection instructions](docs/ACCESSORY_INSPECTION.md).
 - A dependency-free EVCore library for validated telemetry, freshness/source selection, a constant-consumption energy estimator, and bounded ASCII response framing.
-- Domain tests, two simulator UI tests, macOS CI, project generation, and an agent implementation contract.
+- Domain and simulator UI tests, macOS CI, project generation, and an agent implementation contract.
 - An end-to-end roadmap and a hardware evidence template.
 
 **No vehicle, adapter, battery decoder, cloud provider, charger feed, or AI service is validated or integrated yet.** Demo data never counts as evidence of hardware support. The energy experiment is not turn-by-turn routing or a charger-stop optimizer.
