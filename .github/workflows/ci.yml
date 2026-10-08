@@ -30,7 +30,13 @@ jobs:
       - name: Validate source contracts
         run: swift run --disable-index-store repo-tools validate
       - name: Domain and repository tooling tests
-        run: swift test --disable-index-store --jobs 4
+        run: |
+          # SwiftPM 6.0 test discovery needs Swift index records even when
+          # C indexing is disabled for the upstream Nix Clang wrapper.
+          index_store_path="$(swift build --show-bin-path)/index/store"
+          swift test --disable-index-store \
+            -Xswiftc -index-store-path -Xswiftc "$index_store_path" \
+            --jobs 4
   ios:
     runs-on: macos-15
     timeout-minutes: 30

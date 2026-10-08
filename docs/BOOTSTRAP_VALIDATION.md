@@ -1,3 +1,13 @@
+# Linux test discovery index-store correction (2026-10-08)
+
+A fresh Nix build reproduced the Linux CI failure: SwiftPM 6.0 test discovery still opens an index store when `--disable-index-store` is supplied. `--disable-xctest` did not prevent that build step. Earlier local validation reused an index store and did not expose this clean-build failure.
+
+The Linux workflow now determines the expected path using `swift build --show-bin-path`, then passes `-Xswiftc -index-store-path -Xswiftc "$index_store_path"` to `swift test --disable-index-store`. This creates real Swift index records for discovery while leaving C indexing disabled for the upstream Nix Clang wrapper. Both test frameworks remain enabled.
+
+A fresh build in `.build/indexfix-native` with the official Swift 6.0.3 Linux toolchain passed all 27 Swift Testing tests using this command. This follow-up was validated with the unpacked toolchain, not a completed Nix-shell run; remote Linux CI must verify the Nix integration. Whitespace checks passed. Application and macOS commands are unchanged.
+
+---
+
 # In-process Linux hashing follow-up (2026-10-08)
 
 Linux repository tooling now uses pinned Swift Crypto 4.3.1 through the `Crypto` module; macOS continues using system CryptoKit. Both paths call `SHA256.hash` directly. No hash subprocess is launched, and EVCore has no crypto dependency. `Package.resolved` pins Swift Crypto and its transitive Swift ASN.1 dependency.

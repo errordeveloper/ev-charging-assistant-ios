@@ -20,13 +20,16 @@ On x86_64 Linux, install Nix with the `nix-command` and `flakes` features enable
 
 ```bash
 nix develop --no-update-lock-file --command swift run --disable-index-store repo-tools check-toolchain
-nix develop --no-update-lock-file --command swift test --disable-index-store --jobs 4
+nix develop --no-update-lock-file --command bash -euo pipefail -c '
+  index_store_path="$(swift build --show-bin-path)/index/store"
+  swift test --disable-index-store -Xswiftc -index-store-path -Xswiftc "$index_store_path" --jobs 4
+'
 nix develop --no-update-lock-file --command swift run --disable-index-store repo-tools validate
 ```
 
 The Linux shell supplies a checksum-pinned official Swift 6.0.3 toolchain, Git, Clang and GNU coreutils. The locked Nixpkgs Swift compiler is 5.10.1, below this package's Swift 6 requirement. Repository-tool hashing uses Apple’s Swift Crypto 4.3.1 (`Crypto`) on Linux and system CryptoKit on macOS, with the same in-process `SHA256` API. Swift Crypto is pinned to the latest release supporting this Swift 6.0 toolchain; newer releases require Swift 6.1 or 6.2. EVCore remains dependency-free, and the crypto dependency is only linked into Linux repository tooling. Linux ARM64 is not currently exposed by the flake. The Linux package omits the upstream LLDB debugger, whose Ubuntu-specific dependencies are outside this compiler/test workflow.
 
-Linux test commands disable SwiftPM’s optional index store because the Nix Clang wrapper does not support the Swift-specific C indexing flag. Compilation and test assertions still run normally.
+Linux test commands disable automatic C indexing because the Nix Clang wrapper does not support Swift’s C indexing flag, then explicitly generate Swift index records at SwiftPM’s expected path. SwiftPM 6.0 test discovery requires those records even with `--disable-index-store`. Keep both XCTest and Swift Testing enabled. When using `--scratch-path`, pass the same path to `swift build --show-bin-path` and `swift test`.
 
 The shell defaults compiler caches to the ignored `.build/` directory. If your cloud machine's home directory is read-only, append `--cache-path .build/swiftpm-cache --config-path .build/swiftpm-config --security-path .build/swiftpm-security` to SwiftPM commands.
 
