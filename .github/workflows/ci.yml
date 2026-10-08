@@ -10,6 +10,33 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 jobs:
+  linux:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: nix develop --no-update-lock-file --command bash -euo pipefail {0}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install Nix
+        uses: cachix/install-nix-action@b85815f71a6de0ddee80b8a80a98d43f4bcc66c7 # v31
+        with:
+          install_url: https://releases.nixos.org/nix/nix-2.31.2/install
+      - name: Verify Linux toolchain
+        run: swift run --disable-index-store repo-tools check-toolchain
+      - name: Validate source contracts
+        run: swift run --disable-index-store repo-tools validate
+      - name: Domain and repository tooling tests
+        run: |
+          # SwiftPM 6.0 test discovery needs Swift index records even when
+          # C indexing is disabled for the upstream Nix Clang wrapper.
+          index_store_path="$(swift build --show-bin-path)/index/store"
+          swift test --disable-index-store \
+            -Xswiftc -index-store-path -Xswiftc "$index_store_path" \
+            --jobs 4
   ios:
     runs-on: macos-15
     timeout-minutes: 30

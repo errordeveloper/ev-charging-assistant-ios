@@ -44,7 +44,7 @@ The subjects are the SHA-256 digests of the actual bytes of `flake.nix`, `flake.
 - `observations`: fixed tool/version, selected Swift path, simulator SDK/runtime inventory and Git revision/status probes. Each records the command, resolved executable, exit code, stdout and stderr.
 - `collectionSucceeded`: whether every probe completed successfully. An empty runtime inventory can still be collected successfully; this field does not mean UI tests passed or a simulator is installed.
 
-Each command has a 60-second timeout. Missing commands, timeouts and nonzero exits are recorded as failures; the collector writes the incomplete statement and exits nonzero so CI can upload the evidence without treating collection as successful. Missing subject files fail collection because their digests cannot be supplied. This statement replaces the previous plain-text toolchain reports. Test logs and `.xcresult` bundles remain diagnostic artifacts.
+Each command has a 60-second timeout. Missing commands, timeouts and nonzero exits are recorded as failures; the collector writes the incomplete statement, prints each failed probe's name, command, exit code and diagnostic to stderr, and exits nonzero so CI can upload the evidence without treating collection as successful. Missing subject files fail collection because their digests cannot be supplied. This statement replaces the previous plain-text toolchain reports. Test logs and `.xcresult` bundles remain diagnostic artifacts.
 
 ## AI evaluation acceptance
 

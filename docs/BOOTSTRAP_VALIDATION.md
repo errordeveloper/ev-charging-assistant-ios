@@ -1,3 +1,38 @@
+# Linux test discovery index-store correction (2026-10-08)
+
+A fresh Nix build reproduced the Linux CI failure: SwiftPM 6.0 test discovery still opens an index store when `--disable-index-store` is supplied. `--disable-xctest` did not prevent that build step. Earlier local validation reused an index store and did not expose this clean-build failure.
+
+The Linux workflow now determines the expected path using `swift build --show-bin-path`, then passes `-Xswiftc -index-store-path -Xswiftc "$index_store_path"` to `swift test --disable-index-store`. This creates real Swift index records for discovery while leaving C indexing disabled for the upstream Nix Clang wrapper. Both test frameworks remain enabled.
+
+A fresh build in `.build/indexfix-native` with the official Swift 6.0.3 Linux toolchain passed all 27 Swift Testing tests using this command. This follow-up was validated with the unpacked toolchain, not a completed Nix-shell run; remote Linux CI must verify the Nix integration. Whitespace checks passed. Application and macOS commands are unchanged.
+
+---
+
+# In-process Linux hashing follow-up (2026-10-08)
+
+Linux repository tooling now uses pinned Swift Crypto 4.3.1 through the `Crypto` module; macOS continues using system CryptoKit. Both paths call `SHA256.hash` directly. No hash subprocess is launched, and EVCore has no crypto dependency. `Package.resolved` pins Swift Crypto and its transitive Swift ASN.1 dependency.
+
+All 27 unit tests passed in the Linux Nix shell with Swift 6.0.3 and `swift test --disable-index-store --jobs 4`, including known SHA-256 vectors, unusual filenames, missing-file handling and checksum rejection. Linux SwiftPM commands disable optional index-store generation because upstream Nix Clang does not support Swift's C indexing flag. macOS validation is left to CI.
+
+---
+
+# Linux cloud validation (2026-10-06)
+
+The x86_64 Linux flake shell was executed on Debian 13 using Nix 2.20.6 from checksum-pinned nix-portable v012 and the checksum-pinned official Swift 6.0.3 release. Nix mapped its store through bubblewrap; user namespaces required execution outside the command sandbox. CI continues to install Nix 2.31.2.
+
+- `nix flake check --no-update-lock-file --all-systems --no-build`: passed for x86_64 Linux and both Darwin architectures. Darwin outputs were evaluated, not built or tested on this host.
+- `nix develop --no-update-lock-file --command swift test --jobs 4`: clean build passed all 26 Swift Testing tests (10 EVCore and 16 repository-tooling tests). The XCTest compatibility runner's zero-test line is separate from the completed Swift Testing suite.
+- `swift run repo-tools check-toolchain` inside the Nix shell: passed Linux Nix provenance and minimum Swift checks.
+- `swift run repo-tools validate` inside the Nix shell: passed repository contracts and links.
+- `actionlint .github/workflows/ci.yml` from the locked Nixpkgs commit: passed. The added Linux CI job has not been executed remotely.
+- Shell syntax and `git diff --check`: passed.
+
+SwiftPM commands used `--scratch-path .build/nix-linux --cache-path .build/swiftpm-cache --config-path .build/swiftpm-config --security-path .build/swiftpm-security` on this read-only-home cloud host. The Nix shell supplies compiler cache paths under `.build/`, portable Darwin/Glibc imports, GNU SHA-256 hashing on Linux at that revision (subsequently replaced with in-process Swift Crypto), and Nix's Clang linker wrapper so generated binaries use the same libc/loader as the Swift runtime. The original bundled Clang produced a crashing manifest executable by mixing the host loader with Nix libraries; the wrapper correction was verified by the clean package build and tests.
+
+The lockfile and macOS package/shell derivations are unchanged. Linux ARM64, LLDB, iOS cross-compilation, app/UI execution, hardware and Apple-toolchain attestation remain outside this Linux workflow. Xcode and Apple SDKs are still required on macOS. No claim of a macOS build or hardware validation is made by these results.
+
+---
+
 # Bootstrap validation
 
 ## EV-001 follow-up: Swift repository tooling (2026-10-06)

@@ -14,7 +14,7 @@ bash scripts/test-ios.sh
 git diff --check
 ```
 
-Swift tests require Swift 6. App and UI tests require macOS/Xcode. If a tool is unavailable, report the check as not run; never manufacture logs or substitute source inspection for a passed build.
+Swift tests require Swift 6. Use `nix develop --no-update-lock-file --command` on macOS or x86_64 Linux for package tests and repository validation. The Linux shell supplies Swift; macOS uses host Xcode. App and UI tests require macOS/Xcode. If a tool is unavailable, report the check as not run; never manufacture logs or substitute source inspection for a passed build.
 
 Use kebab-case for script filenames, for example `install-xcodegen.sh`. Use kebab-case for repository CLI subcommands too.
 

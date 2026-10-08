@@ -1,6 +1,21 @@
 import Foundation
 
 public func checkToolchain(root: URL, runner: CommandRunner) throws {
+    #if os(Linux)
+    for name in ["git", "swift", "swiftc"] {
+        guard let executable = runner.executable(name) else { throw ToolError("Missing \(name)") }
+        let resolved = URL(fileURLWithPath: executable).resolvingSymlinksInPath().path
+        try require(resolved.hasPrefix("/nix/store/"), "\(name) must come from Nix: \(resolved)")
+    }
+    let config = try readJSON(ToolchainConfig.self, root: root, path: "config/toolchain.json")
+    let swift = try runner.run(["swift", "--version"]).checked()
+    guard let version = captures(swift, #"Swift version (\d+\.\d+)"#).first?.first else {
+        throw ToolError("Expected Swift: \(swift)")
+    }
+    try require(version.compare(config.swiftLanguageVersion, options: .numeric) != .orderedAscending,
+                "Swift \(config.swiftLanguageVersion)+ is required")
+    print("Toolchain checks passed: Nix Git and Swift for Linux package tests. iOS builds require macOS/Xcode.")
+    #else
     for name in ["git", "xcodegen"] {
         guard let executable = runner.executable(name) else { throw ToolError("Missing \(name)") }
         let resolved = URL(fileURLWithPath: executable).resolvingSymlinksInPath().path
@@ -26,6 +41,7 @@ public func checkToolchain(root: URL, runner: CommandRunner) throws {
     try require(matches(sdk, #"^\d+(\.\d+)*$"#) && sdk.compare(config.minimumIOS, options: .numeric) != .orderedAscending,
                 "iOS Simulator SDK \(config.minimumIOS)+ is required; found \(sdk)")
     print("Toolchain checks passed: Nix Git/XcodeGen, host Apple tools, minimum Swift and simulator SDK versions.")
+    #endif
 }
 
 public func checkXcodeGen(runner: CommandRunner) throws {
